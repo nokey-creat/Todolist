@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"Todolist/global"
+	"Todolist/common/utils"
 	"Todolist/models"
-	"Todolist/utils"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -42,31 +42,39 @@ func CheckAuthMiddleware() gin.HandlerFunc {
 func CheckPermissionMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//获取任务id
-		taskId := ctx.Param("id")
+		taskIdStr := ctx.Param("id")
+		taskId, err := strconv.ParseUint(taskIdStr, 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "get taskId error"})
+			ctx.Abort()
+			return
+		}
 
 		//获取userid
 		value, exist := ctx.Get("userid")
 		if !exist {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid user"})
+			ctx.Abort()
 			return
 		}
 		userId, ok := value.(uint)
 		if !ok {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "can not get userid"})
-			return
-		}
-
-		//查询任务并验证所有权
-		var count int64
-		if err := global.DB.Model(&models.Task{}).
-			Where("id = ? AND user_id = ?", taskId, userId).
-			Count(&count).Error; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			ctx.Abort()
 			return
 		}
 
-		if count == 0 {
+		//验证所有权
+		isOwner, err := models.IsOwner(models.GetDB(), uint(taskId), userId)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "can not vervified userid"})
+			ctx.Abort()
+			return
+		}
+
+		//无权访问
+		if !isOwner {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Permission deny or task does not exist"})
 			ctx.Abort()
 			return

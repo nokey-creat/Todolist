@@ -1,10 +1,8 @@
-package database
+package models
 
 import (
-	"Todolist/config"
-	"Todolist/global"
+	"Todolist/common/config"
 	"fmt"
-	"log"
 
 	"time"
 
@@ -12,19 +10,23 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDB() {
+var (
+	db *gorm.DB
+)
+
+func InitDB() error {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.AppConfig.Database.User, config.AppConfig.Database.Password, config.AppConfig.Database.Name)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{TranslateError: true}) //启用这个选项，将sql方言转为gorm error
+	gormDB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{TranslateError: true}) //启用这个选项，将sql方言转为gorm error
 	if err != nil {
-		log.Fatalf("Init DB error: %v", err)
+		return err
 	}
 
-	sqlDB, err := db.DB()
+	sqlDB, err := gormDB.DB()
 	if err != nil {
-		log.Fatalf("Init DB error: %v", err)
+		return err
 	}
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量。
 	sqlDB.SetMaxIdleConns(config.AppConfig.Database.MaxIdleConns)
@@ -33,6 +35,11 @@ func InitDB() {
 	// SetConnMaxLifetime 设置了可以重新使用连接的最大时间。
 	sqlDB.SetConnMaxLifetime(time.Duration(config.AppConfig.Database.ConnMaxLifetime))
 
-	global.DB = db
+	db = gormDB
+	return nil
 
+}
+
+func GetDB() *gorm.DB {
+	return db
 }

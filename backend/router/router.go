@@ -1,47 +1,36 @@
 package router
 
 import (
-	"Todolist/config"
-	"Todolist/controllers"
-	"Todolist/middleware"
+	"Todolist/common/middleware"
+	"Todolist/handler"
 	"net/http"
-	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
-	//在根路由添加core中间件，处理跨域请求
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{config.AppConfig.CORSConfig.AllowOrigins},  //允许所有来源
-		AllowMethods:     []string{"GET", "POST", "DELETE", "PATCH"},          //允许的方法
-		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"}, //除了简单请求头外，允许的头部
-		ExposeHeaders:    []string{"Content-Length"},                          //允许js获取的响应头部（不需要Authorization，这是请求头中的）
-		AllowCredentials: true,                                                // 使用*时不能设置为true
-		MaxAge:           12 * time.Hour,                                      //本次预检请求的有效期
-	}))
+	//在根路由添加cors中间件，处理跨域请求
+	router.Use(middleware.CoreMiddleware())
 
 	{
-		auth := router.Group("/api/auth")
-		auth.POST("/register", controllers.Register)
-		auth.POST("/login", controllers.Login)
+		auth := router.Group("/api/v1/auth")
+		auth.POST("/register", handler.Register)
+		auth.POST("/login", handler.Login)
 
 	}
-
 	{
-		tasks := router.Group("/api/tasks")
+		tasks := router.Group("/api/v1/tasks")
 		tasks.Use(middleware.CheckAuthMiddleware())
 
-		tasks.POST("", controllers.CreatTask)
-		tasks.GET("", controllers.GetTasks)
+		tasks.POST("", handler.CreatTask) // 不能是"/"
+		tasks.GET("", handler.GetTasks)
 
-		tasks.GET("/:id", middleware.CheckPermissionMiddleware(), controllers.GetTaskById)
-		tasks.PATCH("/:id/completed", middleware.CheckPermissionMiddleware(), controllers.ChangeCompleteStauts)
-		tasks.DELETE("/:id", middleware.CheckPermissionMiddleware(), controllers.DeleteTask)
-		tasks.PATCH("/:id", middleware.CheckPermissionMiddleware(), controllers.Updatetask)
+		tasks.GET("/:id", middleware.CheckPermissionMiddleware(), handler.GetTaskById)
+		tasks.PATCH("/:id/completed", middleware.CheckPermissionMiddleware(), handler.ChangeCompleteStauts)
+		tasks.DELETE("/:id", middleware.CheckPermissionMiddleware(), handler.DeleteTask)
+		tasks.PATCH("/:id", middleware.CheckPermissionMiddleware(), handler.Updatetask)
 
 	}
 
