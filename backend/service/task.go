@@ -59,7 +59,7 @@ func ChangeCompleteStauts(c *gin.Context, taskId string) error {
 	task.Completed = !task.Completed
 
 	//更新数据库
-	_, err = models.Updatetask(models.GetDB(), task)
+	_, err = models.UpdatetaskCompleted(models.GetDB(), task)
 	if err != nil {
 		return fmt.Errorf("update task error: %v", err)
 	}
@@ -95,7 +95,7 @@ func Updatetask(c *gin.Context, taskId uint, taskReq *models.Task) error {
 
 func DeleteTask(c *gin.Context, taskId string) error {
 
-	err := DeleteTask(c, taskId)
+	err := models.DeleteTask(models.GetDB(), taskId)
 	if err != nil {
 		return fmt.Errorf("delete task error: %v", err)
 	}
