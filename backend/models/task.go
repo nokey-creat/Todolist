@@ -53,7 +53,7 @@ func SelectTasksById(db *gorm.DB, taskId string) (*Task, error) {
 func Updatetask(db *gorm.DB, task *Task) (*Task, error) {
 
 	//通过task主键查询要更新哪条记录
-	//默认更新非零字段
+	//默认更新非零字段，不能用来更新completed
 	err := db.Model(task).Updates(task).Error
 	if err != nil {
 		return nil, fmt.Errorf("update task error: %v", err)
@@ -68,4 +68,14 @@ func DeleteTask(db *gorm.DB, taskId string) error {
 		return fmt.Errorf("delete task error: %v", err)
 	}
 	return nil
+}
+
+func UpdatetaskCompleted(db *gorm.DB, task *Task) (*Task, error) {
+
+	//更新completed
+	err := db.Model(task).Update("completed", task.Completed).Error
+	if err != nil {
+		return nil, fmt.Errorf("update task error: %v", err)
+	}
+	return task, nil
 }
