@@ -35,7 +35,7 @@ func InitConfig() error {
 	//读取配置文件
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config/")
+	viper.AddConfigPath("./common/config/")
 	viper.AddConfigPath("d:/Codefield/CODE_GO/goweblearning/golang_web/Todolist/backend/config/")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
