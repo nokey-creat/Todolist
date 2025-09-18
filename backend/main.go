@@ -1,8 +1,8 @@
 package main
 
 import (
-	"Todolist/config"
-	"Todolist/database"
+	"Todolist/common/config"
+	"Todolist/models"
 	"Todolist/router"
 	"context"
 	"log"
@@ -15,8 +15,13 @@ import (
 
 func main() {
 
-	config.InitConfig()
-	database.InitDB()
+	if err := config.InitConfig(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := models.InitDB(); err != nil {
+		log.Fatal(err)
+	}
 
 	r := router.SetupRouter()
 
